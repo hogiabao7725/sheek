@@ -4,203 +4,182 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"sheek/internal/history"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
-// Colors
+// Color constants
+const (
+	primaryColorHex    = "#7D56F4"
+	secondaryColorHex  = "#04B575"
+	mutedColorHex      = "#626262"
+	borderColorHex     = "#FFFFFF"
+	textColorHex       = "#FFFFFF"
+	backgroundColorHex = "#1A1A1A"
+	selectedColorHex   = "#2D2D2D"
+	accentColorHex     = "#FFD700"
+)
+
 var (
-	PrimaryColor   = lipgloss.Color("#7D56F4")
-	SecondaryColor = lipgloss.Color("#04B575")
-	MutedColor     = lipgloss.Color("#626262")
-	BorderColor    = lipgloss.Color("#FFFFFF")
-	TextColor      = lipgloss.Color("#FFFFFF")
-	BackgroundColor = lipgloss.Color("#1A1A1A")
-	SelectedColor  = lipgloss.Color("#2D2D2D")
-	AccentColor    = lipgloss.Color("#FFD700")
+	primaryColor    = lipgloss.Color(primaryColorHex)
+	secondaryColor  = lipgloss.Color(secondaryColorHex)
+	mutedColor      = lipgloss.Color(mutedColorHex)
+	borderColor     = lipgloss.Color(borderColorHex)
+	textColor       = lipgloss.Color(textColorHex)
+	backgroundColor = lipgloss.Color(backgroundColorHex)
+	selectedColor   = lipgloss.Color(selectedColorHex)
+	accentColor     = lipgloss.Color(accentColorHex)
 )
 
-// Search Component Styles
+// Style constants
+const (
+	searchPanelWidthRatio = 0.85
+	maxVisibleItems       = 10
+	listContainerHeight   = 12
+	horizontalMargin      = 2
+)
+
+// Component styles
 var (
-	// PromptStyle Prompt symbol (>)
-	PromptStyle = lipgloss.NewStyle().
-			Foreground(PrimaryColor).
-			Bold(true)
+	promptStyle = lipgloss.NewStyle().
+		Foreground(primaryColor).
+		Bold(true)
 
-	// Left panel - search input box
-	SearchInputBoxStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(BorderColor).
-				Foreground(TextColor).
-				PaddingLeft(1).
-				PaddingRight(1).
-				Height(1)
+	searchInputStyle = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(borderColor).
+		Foreground(textColor).
+		PaddingLeft(1).
+		PaddingRight(1).
+		Height(1)
 
-	// Right panel - mode badge
-	ModeBadgeStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(SecondaryColor).
-			Foreground(SecondaryColor).
-			Bold(true).
-			PaddingLeft(1).
-			PaddingRight(1).
-			Height(1).
-			Align(lipgloss.Center)
+	modeBadgeStyle = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(secondaryColor).
+		Foreground(secondaryColor).
+		Bold(true).
+		PaddingLeft(1).
+		PaddingRight(1).
+		Height(1).
+		Align(lipgloss.Center)
 
-	// Container for search bar
-	SearchContainerStyle = lipgloss.NewStyle().
-				MarginLeft(1).
-				MarginRight(1).
-				MarginTop(1).
-				MarginBottom(1)
+	searchContainerStyle = lipgloss.NewStyle().
+		MarginLeft(1).
+		MarginRight(1).
+		MarginTop(1).
+		MarginBottom(1)
+
+	listContainerStyle = lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(borderColor).
+		MarginLeft(1).
+		MarginRight(1).
+		MarginTop(1).
+		Padding(1)
+
+	listItemStyle = lipgloss.NewStyle().
+		Foreground(textColor).
+		PaddingLeft(1).
+		PaddingRight(1)
+
+	listItemSelectedStyle = lipgloss.NewStyle().
+		Foreground(textColor).
+		Background(selectedColor).
+		PaddingLeft(1).
+		PaddingRight(1)
+
+	itemNumberStyle = lipgloss.NewStyle().
+		Foreground(accentColor).
+		Bold(true).
+		Width(4).
+		Align(lipgloss.Right)
+
+	commandTextStyle = lipgloss.NewStyle().
+		Foreground(textColor).
+		MarginLeft(1)
+
+	emptyStateStyle = lipgloss.NewStyle().
+		Foreground(mutedColor).
+		Align(lipgloss.Center).
+		Padding(2)
 )
 
-// List Component Styles
-var (
-	// List container style
-	ListContainerStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(BorderColor).
-				Background(BackgroundColor).
-				MarginLeft(1).
-				MarginRight(1).
-				MarginTop(1).
-				Padding(1)
-
-	// Individual list item styles
-	ListItemStyle = lipgloss.NewStyle().
-			Foreground(TextColor).
-			PaddingLeft(1).
-			PaddingRight(1).
-			PaddingTop(0).
-			PaddingBottom(0)
-
-	ListItemSelectedStyle = lipgloss.NewStyle().
-				Foreground(TextColor).
-				Background(SelectedColor).
-				PaddingLeft(1).
-				PaddingRight(1).
-				PaddingTop(0).
-				PaddingBottom(0)
-
-	// Item number style
-	ItemNumberStyle = lipgloss.NewStyle().
-			Foreground(AccentColor).
-			Bold(true).
-			Width(4).
-			Align(lipgloss.Right)
-
-	// Command text style
-	CommandTextStyle = lipgloss.NewStyle().
-			Foreground(TextColor).
-			MarginLeft(1)
-
-	// Empty state style
-	EmptyStateStyle = lipgloss.NewStyle().
-			Foreground(MutedColor).
-			Align(lipgloss.Center).
-			Padding(2)
-)
-
-// RenderSearchComponent renders the two-column search bar
-func RenderSearchComponent(prompt string, inputValue string, mode string, terminalWidth int) string {
-	// Calculate widths
-	usableWidth := terminalWidth - 4 // Account for margins
-
-	// 85% for input, 15% for mode
-	// Subtract 4 for borders (2 chars per panel)
+// RenderSearchComponent renders a two-column search bar with input and mode badge
+func RenderSearchComponent(prompt, inputValue, mode string, terminalWidth int) string {
+	usableWidth := terminalWidth - (horizontalMargin * 2)
 	contentWidth := usableWidth - 2
-	inputPanelWidth := int(float64(contentWidth) * 0.85)
-	modePanelWidth := contentWidth - inputPanelWidth
 
-	// Build left panel content
-	promptText := PromptStyle.Render(prompt)
-	leftContent := promptText + inputValue
+	inputWidth := int(float64(contentWidth) * searchPanelWidthRatio)
+	modeWidth := contentWidth - inputWidth
 
-	leftPanel := SearchInputBoxStyle.
-		Width(inputPanelWidth).
-		Render(leftContent)
+	leftContent := promptStyle.Render(prompt) + inputValue
+	leftPanel := searchInputStyle.Width(inputWidth).Render(leftContent)
 
-	// Build right panel content
 	modeText := fmt.Sprintf("[%s]", mode)
-	rightPanel := ModeBadgeStyle.
-		Width(modePanelWidth).
-		Render(modeText)
+	rightPanel := modeBadgeStyle.Width(modeWidth).Render(modeText)
 
-	// Join panels horizontally
-	searchBar := lipgloss.JoinHorizontal(
-		lipgloss.Top,
-		leftPanel,
-		rightPanel,
-	)
-
-	return SearchContainerStyle.Render(searchBar)
+	searchBar := lipgloss.JoinHorizontal(lipgloss.Top, leftPanel, rightPanel)
+	return searchContainerStyle.Render(searchBar)
 }
 
-// RenderListComponent renders the command list with custom styling
-// Shows maximum 10 items at a time, like fzf
-func RenderListComponent(commands []history.Command, selectedIndex int, terminalWidth int, terminalHeight int) string {
+// RenderListComponent renders a sliding window of command list items
+func RenderListComponent(commands []history.Command, selectedIndex, terminalWidth, terminalHeight int) string {
 	if len(commands) == 0 {
 		emptyMessage := "No commands found"
-		return ListContainerStyle.
-			Width(terminalWidth - 4).
-			Height(12).
-			Render(EmptyStateStyle.Render(emptyMessage))
+		return listContainerStyle.
+			Width(terminalWidth - (horizontalMargin * 2)).
+			Height(listContainerHeight).
+			Render(emptyStateStyle.Render(emptyMessage))
 	}
 
-	// Maximum 10 items visible at once
-	const maxVisibleItems = 10
-	
-	var items []string
-	var startIndex, endIndex int
-	
-	// Determine which items to show based on selected index
-	if len(commands) <= maxVisibleItems {
-		// Show all items if we have less than 10
-		startIndex = 0
-		endIndex = len(commands)
-	} else {
-		// Show sliding window of 10 items centered on selected item
-		if selectedIndex < maxVisibleItems/2 {
-			startIndex = 0
-			endIndex = maxVisibleItems
-		} else if selectedIndex > len(commands)-maxVisibleItems/2 {
-			startIndex = len(commands) - maxVisibleItems
-			endIndex = len(commands)
-		} else {
-			startIndex = selectedIndex - maxVisibleItems/2
-			endIndex = selectedIndex + maxVisibleItems/2
-		}
+	startIndex, endIndex := calculateVisibleRange(len(commands), selectedIndex)
+	items := renderCommandItems(commands, startIndex, endIndex, selectedIndex)
+	listContent := strings.Join(items, "\n")
+
+	return listContainerStyle.
+		Width(terminalWidth - (horizontalMargin * 2)).
+		Height(listContainerHeight).
+		Render(listContent)
+}
+
+// calculateVisibleRange determines which items to display in a sliding window
+func calculateVisibleRange(total, selectedIndex int) (start, end int) {
+	if total <= maxVisibleItems {
+		return 0, total
 	}
 
-	// Render visible items
-	for i := startIndex; i < endIndex && i < len(commands); i++ {
+	halfWindow := maxVisibleItems / 2
+
+	if selectedIndex < halfWindow {
+		return 0, maxVisibleItems
+	}
+
+	if selectedIndex > total-halfWindow {
+		return total - maxVisibleItems, total
+	}
+
+	return selectedIndex - halfWindow, selectedIndex + halfWindow
+}
+
+// renderCommandItems creates styled items for the visible range
+func renderCommandItems(commands []history.Command, start, end, selectedIndex int) []string {
+	items := make([]string, 0, maxVisibleItems)
+
+	for i := start; i < end && i < len(commands); i++ {
 		cmd := commands[i]
 		isSelected := i == selectedIndex
-		
-		// Render item number
-		itemNumber := ItemNumberStyle.Render(fmt.Sprintf("%d", cmd.Index))
-		
-		// Render command text
-		commandText := CommandTextStyle.Render(cmd.Text)
-		
-		// Combine number and command
+
+		itemNumber := itemNumberStyle.Render(fmt.Sprintf("%d", cmd.Index))
+		commandText := commandTextStyle.Render(cmd.Text)
 		itemContent := lipgloss.JoinHorizontal(lipgloss.Top, itemNumber, commandText)
-		
-		// Apply appropriate style based on selection
+
 		if isSelected {
-			items = append(items, ListItemSelectedStyle.Render(itemContent))
+			items = append(items, listItemSelectedStyle.Render(itemContent))
 		} else {
-			items = append(items, ListItemStyle.Render(itemContent))
+			items = append(items, listItemStyle.Render(itemContent))
 		}
 	}
 
-	// Join all items vertically
-	listContent := strings.Join(items, "\n")
-	
-	// Render the container with fixed height (10 items + borders)
-	return ListContainerStyle.
-		Width(terminalWidth - 4).
-		Height(12).
-		Render(listContent)
+	return items
 }

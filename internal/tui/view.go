@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -10,39 +9,16 @@ import (
 func View(model Model) string {
 	var b strings.Builder
 
-	// Render search component
-	searchBar := RenderSearchComponent(
-		"> ",
-		model.Input.Value(),
-		model.SearchMode,
-		model.Width,
-	)
+	searchBar := RenderSearchComponent("> ", model.Input.Value(), model.SearchMode, model.Width)
 	b.WriteString(searchBar)
 	b.WriteString("\n")
 
-	// Match count
-	matchInfo := fmt.Sprintf("%d matches", model.MatchCount)
-	infoStyle := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		MarginLeft(2)
-	b.WriteString(infoStyle.Render(matchInfo))
-	b.WriteString("\n")
-
-	// Command list
-	listView := RenderListComponent(
-		model.Commands,
-		model.List.Index(),
-		model.Width,
-		model.Height,
-	)
+	listView := RenderListComponent(model.Commands, model.List.Index(), model.Width, model.Height)
 	b.WriteString(listView)
 	b.WriteString("\n")
 
-	// Help text
 	helpText := "tab: toggle mode │ enter: select │ esc: quit"
-	helpStyle := lipgloss.NewStyle().
-		Foreground(MutedColor).
-		MarginLeft(2)
+	helpStyle := lipgloss.NewStyle().Foreground(mutedColor).MarginLeft(2)
 	b.WriteString(helpStyle.Render(helpText))
 
 	return b.String()
