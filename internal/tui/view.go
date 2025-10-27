@@ -29,7 +29,13 @@ func View(model Model) string {
 	b.WriteString("\n")
 
 	// Command list
-	b.WriteString(model.List.View())
+	listView := RenderListComponent(
+		model.Commands,
+		model.List.Index(),
+		model.Width,
+		model.Height,
+	)
+	b.WriteString(listView)
 	b.WriteString("\n")
 
 	// Help text
