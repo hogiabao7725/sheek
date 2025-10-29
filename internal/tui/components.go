@@ -37,7 +37,7 @@ const (
 	searchPanelWidthRatio = 0.85
 	maxVisibleItems       = 10
 	listContainerHeight   = 12
-	horizontalMargin      = 2
+	horizontalMargin      = 1
 )
 
 // Component styles
@@ -107,8 +107,9 @@ var (
 
 // RenderSearchComponent renders a two-column search bar with input and mode badge
 func RenderSearchComponent(prompt, inputValue, mode string, terminalWidth int) string {
+	
 	usableWidth := terminalWidth - (horizontalMargin * 2)
-	contentWidth := usableWidth - 2
+	contentWidth := usableWidth - 4
 
 	inputWidth := int(float64(contentWidth) * searchPanelWidthRatio)
 	modeWidth := contentWidth - inputWidth
@@ -128,7 +129,7 @@ func RenderListComponent(commands []history.Command, selectedIndex, terminalWidt
 	if len(commands) == 0 {
 		emptyMessage := "No commands found"
 		return listContainerStyle.
-			Width(terminalWidth - (horizontalMargin * 2)).
+			Width(terminalWidth - (horizontalMargin * 2) - 2).
 			Height(listContainerHeight).
 			Render(emptyStateStyle.Render(emptyMessage))
 	}
@@ -138,7 +139,7 @@ func RenderListComponent(commands []history.Command, selectedIndex, terminalWidt
 	listContent := strings.Join(items, "\n")
 
 	return listContainerStyle.
-		Width(terminalWidth - (horizontalMargin * 2)).
+		Width(terminalWidth - (horizontalMargin * 2) - 2).
 		Height(listContainerHeight).
 		Render(listContent)
 }
