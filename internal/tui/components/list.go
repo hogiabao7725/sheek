@@ -10,8 +10,18 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// SearchMode represents the type of search to perform
+type SearchMode string
+
+const (
+	// SearchModeExact performs exact substring matching
+	SearchModeExact SearchMode = "Exact"
+	// SearchModeFuzzy performs fuzzy matching
+	SearchModeFuzzy SearchMode = "Fuzzy"
+)
+
 // RenderListComponent renders a sliding window of command list items with scrollbar
-func RenderListComponent(commands []history.Command, selectedIndex, terminalWidth, terminalHeight int, searchInput string) string {
+func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]int, selectedIndex, terminalWidth, terminalHeight int, searchInput string, searchMode SearchMode) string {
 	if len(commands) == 0 {
 		emptyMessage := "No commands found"
 		return styles.ListContainerStyle.
@@ -32,7 +42,7 @@ func RenderListComponent(commands []history.Command, selectedIndex, terminalWidt
 	itemWidth := calculateItemWidth(containerWidth, scrollbar != "")
 
 	// Render items with correct width for selected item highlighting
-	items := renderCommandItems(commands, startIndex, endIndex, selectedIndex, searchInput, itemWidth)
+	items := renderCommandItems(commands, fuzzyPositions, startIndex, endIndex, selectedIndex, searchInput, searchMode, itemWidth)
 	listContent := strings.Join(items, "\n")
 
 	// If no scrollbar needed, return just the list
@@ -73,7 +83,7 @@ func calculateItemWidth(containerWidth int, hasScrollbar bool) int {
 }
 
 // renderCommandItems creates styled items for the visible range with highlighting
-func renderCommandItems(commands []history.Command, start, end, selectedIndex int, searchInput string, itemWidth int) []string {
+func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int, start, end, selectedIndex int, searchInput string, searchMode SearchMode, itemWidth int) []string {
 	items := make([]string, 0, styles.MaxVisibleItems)
 
 	for i := start; i < end && i < len(commands); i++ {
@@ -82,8 +92,16 @@ func renderCommandItems(commands []history.Command, start, end, selectedIndex in
 
 		itemNumber := styles.ItemNumberStyle.Render(fmt.Sprintf("%d", cmd.Index))
 
-		// Highlight matching text in command (pass isSelected to use appropriate style)
-		highlightedText := HighlightMatches(cmd.Text, searchInput, isSelected)
+		// Highlight matching text based on search mode
+		var highlightedText string
+		if searchMode == SearchModeFuzzy {
+			// Use fuzzy highlighting with match positions
+			matchPositions := fuzzyPositions[cmd.Index]
+			highlightedText = HighlightFuzzyMatches(cmd.Text, matchPositions, isSelected)
+		} else {
+			// Use exact substring highlighting
+			highlightedText = HighlightMatches(cmd.Text, searchInput, isSelected)
+		}
 		commandText := styles.CommandTextStyle.Render(highlightedText)
 
 		itemContent := lipgloss.JoinHorizontal(lipgloss.Top, itemNumber, commandText)

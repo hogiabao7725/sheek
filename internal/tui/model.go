@@ -10,13 +10,14 @@ import (
 
 // Model represents the application state
 type Model struct {
-	Input           textinput.Model
-	List            list.Model
-	Commands        []history.Command
+	Input            textinput.Model
+	List             list.Model
+	Commands         []history.Command
 	FilteredCommands []history.Command
-	SearchMode      SearchMode
-	Width           int
-	Height          int
+	FuzzyPositions   map[int][]int // Map command index -> match positions for fuzzy highlighting
+	SearchMode       SearchMode
+	Width            int
+	Height           int
 }
 
 // NewModel creates a new Model with the given commands

@@ -75,11 +75,19 @@ func updateSearchResults(model Model) Model {
 	switch model.SearchMode {
 	case SearchModeExact:
 		filtered = history.SearchExact(model.Commands, inputValue)
+		model.FuzzyPositions = nil // Clear fuzzy positions for exact search
 	case SearchModeFuzzy:
-		// TODO: Implement fuzzy search
-		filtered = history.SearchExact(model.Commands, inputValue)
+		fuzzyResults := history.SearchFuzzyWithPositions(model.Commands, inputValue)
+		// Build map from command index to match positions
+		model.FuzzyPositions = make(map[int][]int, len(fuzzyResults))
+		filtered = make([]history.Command, len(fuzzyResults))
+		for i, result := range fuzzyResults {
+			filtered[i] = result.Command
+			model.FuzzyPositions[result.Command.Index] = result.Positions
+		}
 	default:
 		filtered = history.SearchExact(model.Commands, inputValue)
+		model.FuzzyPositions = nil
 	}
 
 	// Check if search results changed
