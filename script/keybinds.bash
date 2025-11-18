@@ -17,12 +17,21 @@ fi
 
 if [ -z "$SHEEK_BIN" ] || [ ! -f "$SHEEK_BIN" ]; then
     echo "Warning: sheek binary not found. Please install sheek first." >&2
+    echo "Run: cd /path/to/sheek && ./script/install.sh" >&2
+    return 1
+fi
+
+# Verify binary is executable
+if [ ! -x "$SHEEK_BIN" ]; then
+    echo "Warning: sheek binary is not executable: $SHEEK_BIN" >&2
     return 1
 fi
 
 sheek-bash-widget() {
     local selected
-    selected=$($SHEEK_BIN 2>/dev/null)
+    # Preserve TERM and COLORTERM for color support
+    # Capture stdout for command, but allow stderr to show (for command preview)
+    selected=$(TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" $SHEEK_BIN)
     
     if [ -n "$selected" ]; then
         # Remove trailing newline if any
@@ -33,6 +42,32 @@ sheek-bash-widget() {
     fi
 }
 
+# Shell function to run sheek and add selected command to history
+# Note: In bash, we can't directly modify the prompt buffer from a function,
+# so we add it to history and user can press Up arrow to retrieve it.
+# For full functionality (command in prompt buffer), use Ctrl+T keybind instead.
+sheek() {
+    local selected
+    # Preserve TERM and COLORTERM for color support
+    selected=$(TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" $SHEEK_BIN)
+    
+    if [ -n "$selected" ]; then
+        # Remove trailing newline if any
+        selected=$(echo "$selected" | tr -d '\n')
+        # Add to history so user can press Up arrow to get it
+        if [[ $- == *i* ]] && [ -n "$BASH_VERSION" ]; then
+            history -s "$selected"
+            echo "Command added to history. Press Up arrow to retrieve: $selected"
+        else
+            # Just print the command
+            echo "$selected"
+        fi
+    fi
+}
+
+# Bind Ctrl+T to sheek widget
+# Unbind any existing Ctrl+T binding first
+bind -r '\C-t' 2>/dev/null || true
 # Bind Ctrl+T to sheek widget
 bind -x '"\C-t": sheek-bash-widget'
 

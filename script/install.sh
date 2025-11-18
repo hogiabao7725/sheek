@@ -6,12 +6,20 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-echo "=== sheek Installation ==="
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+echo -e "${BOLD}=== sheek Installation ===${NC}"
 echo ""
 
 # Check if Go is installed
 if ! command -v go &> /dev/null; then
-    echo "Error: Go is not installed. Please install Go first." >&2
+    echo -e "${RED}Error: Go is not installed. Please install Go first.${NC}" >&2
     exit 1
 fi
 
@@ -19,11 +27,11 @@ fi
 echo "Building sheek..."
 cd "$PROJECT_ROOT"
 if ! go build -o bin/sheek ./cmd/main-sheek; then
-    echo "Error: Failed to build sheek." >&2
+    echo -e "${RED}Error: Failed to build sheek.${NC}" >&2
     exit 1
 fi
 
-echo "Build successful!"
+echo -e "${GREEN}Build successful!${NC}"
 echo ""
 
 # Ask for installation location
@@ -59,12 +67,12 @@ case $install_choice in
         fi
         cp "$PROJECT_ROOT/bin/sheek" "$BINARY_PATH"
         chmod +x "$BINARY_PATH"
-        echo "Installed to $BINARY_PATH"
+        echo -e "${GREEN}Installed to $BINARY_PATH${NC}"
         ;;
     2)
         # System-wide installation
         if [ "$EUID" -ne 0 ]; then
-            echo "System-wide installation requires sudo privileges."
+            echo -e "${YELLOW}System-wide installation requires sudo privileges.${NC}"
             BINARY_PATH="/usr/local/bin/sheek"
             # Remove old binary if exists
             if [ -f "$BINARY_PATH" ]; then
@@ -76,7 +84,7 @@ case $install_choice in
             fi
             sudo cp "$PROJECT_ROOT/bin/sheek" "$BINARY_PATH"
             sudo chmod +x "$BINARY_PATH"
-            echo "Installed to $BINARY_PATH"
+            echo -e "${GREEN}Installed to $BINARY_PATH${NC}"
         else
             BINARY_PATH="/usr/local/bin/sheek"
             # Remove old binary if exists
@@ -89,35 +97,66 @@ case $install_choice in
             fi
             cp "$PROJECT_ROOT/bin/sheek" "$BINARY_PATH"
             chmod +x "$BINARY_PATH"
-            echo "Installed to $BINARY_PATH"
+            echo -e "${GREEN}Installed to $BINARY_PATH${NC}"
         fi
         ;;
     *)
-        echo "Invalid choice. Exiting."
+        echo -e "${RED}Invalid choice. Exiting.${NC}"
         exit 1
         ;;
 esac
 
 echo ""
-echo "=== Keybind files ==="
-echo "Keybind files are ready at:"
+echo -e "${BOLD}=== Installation Complete ===${NC}"
+echo ""
+echo -e "${GREEN}sheek binary installed at: $BINARY_PATH${NC}"
+echo ""
+
+# Detect shell and provide instructions
+CURRENT_SHELL="${SHELL##*/}"
+if [ -z "$CURRENT_SHELL" ]; then
+    CURRENT_SHELL="unknown"
+fi
+
+echo -e "${BOLD}=== Shell Integration ===${NC}"
+echo ""
+echo -e "${BLUE}To use sheek with Ctrl+T keybind:${NC}"
+echo ""
+
+if [ "$CURRENT_SHELL" = "zsh" ]; then
+    echo -e "${YELLOW}For zsh:${NC}"
+    echo "  Add this line to ~/.zshrc:"
+    echo -e "    ${BOLD}source $SCRIPT_DIR/keybinds.zsh${NC}"
+    echo ""
+    echo "  Then run:"
+    echo -e "    ${BOLD}source ~/.zshrc${NC}"
+    echo ""
+    echo "  Or restart your terminal."
+elif [ "$CURRENT_SHELL" = "bash" ]; then
+    echo -e "${YELLOW}For bash:${NC}"
+    echo "  Add this line to ~/.bashrc:"
+    echo -e "    ${BOLD}source $SCRIPT_DIR/keybinds.bash${NC}"
+    echo ""
+    echo "  Then run:"
+    echo -e "    ${BOLD}source ~/.bashrc${NC}"
+    echo ""
+    echo "  Or restart your terminal."
+else
+    echo -e "${YELLOW}Detected shell: $CURRENT_SHELL${NC}"
+    echo ""
+    echo -e "${YELLOW}For zsh:${NC}"
+    echo "  Add this line to ~/.zshrc:"
+    echo -e "    ${BOLD}source $SCRIPT_DIR/keybinds.zsh${NC}"
+    echo ""
+    echo -e "${YELLOW}For bash:${NC}"
+    echo "  Add this line to ~/.bashrc:"
+    echo -e "    ${BOLD}source $SCRIPT_DIR/keybinds.bash${NC}"
+    echo ""
+fi
+
+echo ""
+echo "Keybind files location:"
 echo "  - $SCRIPT_DIR/keybinds.zsh (for zsh)"
 echo "  - $SCRIPT_DIR/keybinds.bash (for bash)"
-
 echo ""
-echo "=== Installation Complete ==="
-echo ""
-echo "To use sheek with Ctrl+T:"
-echo ""
-echo "For zsh:"
-echo "  Add to ~/.zshrc:"
-echo "    source $SCRIPT_DIR/keybinds.zsh"
-echo ""
-echo "For bash:"
-echo "  Add to ~/.bashrc:"
-echo "    source $SCRIPT_DIR/keybinds.bash"
-echo ""
-echo "Then run: source ~/.zshrc  (or source ~/.bashrc)"
-echo ""
-echo "sheek binary installed at: $BINARY_PATH"
-
+echo -e "${GREEN}After setting up, press Ctrl+T to search command history!${NC}"

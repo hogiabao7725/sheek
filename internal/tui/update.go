@@ -63,12 +63,14 @@ func isNavigationKey(key string) bool {
 // handleEnterKey handles the enter key press
 func handleEnterKey(model Model) (Model, tea.Cmd) {
 	// Save the selected command before quitting (like fzf output)
+	// This command will be printed to stdout in main.go
 	if len(model.FilteredCommands) > 0 {
 		selectedIndex := model.List.Index()
 		if selectedIndex >= 0 && selectedIndex < len(model.FilteredCommands) {
 			model.SelectedCommand = model.FilteredCommands[selectedIndex].Text
 		}
 	}
+	// Quit the program - main.go will handle printing the selected command
 	return model, tea.Quit
 }
 
