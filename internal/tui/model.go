@@ -2,23 +2,26 @@ package tui
 
 import (
 	"sheek/internal/history"
+	"sheek/internal/tui/components"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
+// Model represents the application state
 type Model struct {
-	Input      textinput.Model
-	List       list.Model
-	Commands   []history.Command
-	SearchMode string
-	MatchCount int
-	Width      int
-	Height     int
+	Input           textinput.Model
+	List            list.Model
+	Commands        []history.Command
+	FilteredCommands []history.Command
+	SearchMode      SearchMode
+	Width           int
+	Height          int
 }
 
+// NewModel creates a new Model with the given commands
 func NewModel(commands []history.Command) Model {
-	items := CommandsToListItems(commands)
+	items := components.CommandsToListItems(commands)
 
 	in := textinput.New()
 	in.Placeholder = "Search History..."
@@ -31,10 +34,10 @@ func NewModel(commands []history.Command) Model {
 	l.SetFilteringEnabled(false)
 
 	return Model{
-		Input:      in,
-		List:       l,
-		Commands:   commands,
-		SearchMode: "Exact",
-		MatchCount: len(commands),
+		Input:           in,
+		List:            l,
+		Commands:        commands,
+		FilteredCommands: commands,
+		SearchMode:      SearchModeExact,
 	}
 }

@@ -25,14 +25,14 @@ func main() {
 
 	model := tui.NewModel(cmds)
 
-	// 💡 Dùng AltScreen để vẽ toàn màn hình, không đè prompt cũ
+	// Use AltScreen to draw full screen without overwriting old prompt
 	p := tea.NewProgram(teaModel(model), tea.WithAltScreen())
 
-	// 🧽 Chạy chương trình, sau khi Quit thì dọn sạch terminal
+	// Run the program and clean up terminal after quit
 	if _, err := p.Run(); err != nil {
 		log.Fatalf("error running program: %v", err)
 	}
 
-	// 💨 Clear màn hình sau khi chương trình kết thúc (fzf style)
+	// Clear screen after program ends (fzf style)
 	print("\033[H\033[2J")
 }

@@ -1,8 +1,8 @@
-package tui
+package styles
 
 import "github.com/charmbracelet/lipgloss"
 
-// Color constants
+// Color hex constants
 const (
 	primaryColorHex    = "#7D56F4"
 	secondaryColorHex  = "#04B575"
@@ -10,36 +10,43 @@ const (
 	borderColorHex     = "#FFFFFF"
 	textColorHex       = "#FFFFFF"
 	backgroundColorHex = "#1A1A1A"
-	selectedColorHex   = "#2D2D2D"
+	selectedColorHex   = "#3A3A5C"
+	highlightColorHex  = "#FFD700"
 	accentColorHex     = "#FFD700"
 )
 
+// Color variables for use in styles
 var (
+	// Exported colors
+	MutedColor = lipgloss.Color(mutedColorHex)
+
+	// Internal colors (used in styles)
 	primaryColor    = lipgloss.Color(primaryColorHex)
 	secondaryColor  = lipgloss.Color(secondaryColorHex)
-	mutedColor      = lipgloss.Color(mutedColorHex)
+	mutedColor      = MutedColor
 	borderColor     = lipgloss.Color(borderColorHex)
 	textColor       = lipgloss.Color(textColorHex)
 	backgroundColor = lipgloss.Color(backgroundColorHex)
 	selectedColor   = lipgloss.Color(selectedColorHex)
 	accentColor     = lipgloss.Color(accentColorHex)
+	highlightColor  = lipgloss.Color(highlightColorHex)
 )
 
-// Style constants
+// Layout constants
 const (
-	searchPanelWidthRatio = 0.85
-	maxVisibleItems       = 10
-	listContainerHeight   = 12
-	horizontalMargin      = 1
+	SearchPanelWidthRatio = 0.85
+	MaxVisibleItems       = 10
+	ListContainerHeight   = 12
+	HorizontalMargin      = 1
 )
 
-// Component styles
+// Component styles - exported for use in components package
 var (
-	promptStyle = lipgloss.NewStyle().
+	PromptStyle = lipgloss.NewStyle().
 			Foreground(primaryColor).
 			Bold(true)
 
-	searchInputStyle = lipgloss.NewStyle().
+	SearchInputStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(borderColor).
 				Foreground(textColor).
@@ -47,7 +54,7 @@ var (
 				PaddingRight(1).
 				Height(1)
 
-	modeBadgeStyle = lipgloss.NewStyle().
+	ModeBadgeStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(secondaryColor).
 			Foreground(secondaryColor).
@@ -57,13 +64,13 @@ var (
 			Height(1).
 			Align(lipgloss.Center)
 
-	searchContainerStyle = lipgloss.NewStyle().
+	SearchContainerStyle = lipgloss.NewStyle().
 				MarginLeft(1).
 				MarginRight(1).
 				MarginTop(1).
 				MarginBottom(1)
 
-	listContainerStyle = lipgloss.NewStyle().
+	ListContainerStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(borderColor).
 				MarginLeft(1).
@@ -71,37 +78,49 @@ var (
 				MarginTop(1).
 				Padding(1)
 
-	listItemStyle = lipgloss.NewStyle().
+	ListItemStyle = lipgloss.NewStyle().
 			Foreground(textColor).
 			PaddingLeft(1).
 			PaddingRight(1)
 
-	listItemSelectedStyle = lipgloss.NewStyle().
+	ListItemSelectedStyle = lipgloss.NewStyle().
 				Foreground(textColor).
 				Background(selectedColor).
+				Bold(true).
 				PaddingLeft(1).
 				PaddingRight(1)
 
-	itemNumberStyle = lipgloss.NewStyle().
+	HighlightStyle = lipgloss.NewStyle().
+			Foreground(highlightColor).
+			Bold(true).
+			Underline(true)
+
+	HighlightSelectedStyle = lipgloss.NewStyle().
+			Foreground(highlightColor).
+			Bold(true).
+			Underline(true)
+
+	ItemNumberStyle = lipgloss.NewStyle().
 			Foreground(accentColor).
 			Bold(true).
 			Width(4).
 			Align(lipgloss.Right)
 
-	commandTextStyle = lipgloss.NewStyle().
+	CommandTextStyle = lipgloss.NewStyle().
 				Foreground(textColor).
 				MarginLeft(1)
 
-	emptyStateStyle = lipgloss.NewStyle().
+	EmptyStateStyle = lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Align(lipgloss.Center).
 			Padding(2)
 
-	scrollbarTrackStyle = lipgloss.NewStyle().
+	ScrollbarTrackStyle = lipgloss.NewStyle().
 				Foreground(mutedColor).
 				Width(1)
 
-	scrollbarThumbStyle = lipgloss.NewStyle().
+	ScrollbarThumbStyle = lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Width(1)
 )
+
