@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
-
-	tea "github.com/charmbracelet/bubbletea"
 	"sheek/internal/history"
 	"sheek/internal/tui"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type teaModel tui.Model
@@ -25,14 +26,34 @@ func main() {
 
 	model := tui.NewModel(cmds)
 
-	// Use AltScreen to draw full screen without overwriting old prompt
-	p := tea.NewProgram(teaModel(model), tea.WithAltScreen())
+	// Save cursor position before starting TUI (for cleanup)
+	fmt.Print("\033[s") // Save cursor position
 
-	// Run the program and clean up terminal after quit
-	if _, err := p.Run(); err != nil {
+	// Run inline in current terminal session (like fzf) instead of alt screen
+	p := tea.NewProgram(teaModel(model))
+
+	// Run the program
+	m, err := p.Run()
+	if err != nil {
 		log.Fatalf("error running program: %v", err)
 	}
 
-	// Clear screen after program ends (fzf style)
-	print("\033[H\033[2J")
+	// Clear TUI output and print selected command (like fzf)
+	if tm, ok := m.(teaModel); ok {
+		selectedModel := tui.Model(tm)
+		
+		// Restore cursor to saved position (start of TUI)
+		fmt.Print("\033[u") // Restore cursor position
+		
+		// Move cursor up many lines and clear from there to end of screen
+		// This ensures we clear all TUI output regardless of how many lines it used
+		fmt.Print("\033[50A") // Move up 50 lines (should be enough)
+		fmt.Print("\033[0J")  // Clear from cursor to end of screen
+		
+		if selectedModel.SelectedCommand != "" {
+			// Print only the selected command (clean output like fzf)
+			fmt.Println(selectedModel.SelectedCommand)
+		}
+		// If no command selected (ESC/Ctrl+C), nothing is printed (like fzf)
+	}
 }

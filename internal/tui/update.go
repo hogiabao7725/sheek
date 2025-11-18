@@ -62,8 +62,13 @@ func isNavigationKey(key string) bool {
 
 // handleEnterKey handles the enter key press
 func handleEnterKey(model Model) (Model, tea.Cmd) {
-	// When enter is pressed, the selected command could be executed
-	// For now, we just quit. This can be extended later.
+	// Save the selected command before quitting (like fzf output)
+	if len(model.FilteredCommands) > 0 {
+		selectedIndex := model.List.Index()
+		if selectedIndex >= 0 && selectedIndex < len(model.FilteredCommands) {
+			model.SelectedCommand = model.FilteredCommands[selectedIndex].Text
+		}
+	}
 	return model, tea.Quit
 }
 

@@ -18,6 +18,8 @@ type Model struct {
 	SearchMode       SearchMode
 	Width            int
 	Height           int
+	SelectedCommand  string // Command selected when user presses Enter
+	LinesRendered    int    // Number of lines rendered by the UI (for cleanup)
 }
 
 // NewModel creates a new Model with the given commands
