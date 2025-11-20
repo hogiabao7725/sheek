@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sheek/internal/config"
 	"sheek/internal/history"
 	"sheek/internal/tui"
+	"sheek/internal/tui/styles"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -31,13 +33,23 @@ func main() {
 		initialQuery = os.Getenv("SHEEK_INITIAL_QUERY")
 	}
 
+	// Load configuration
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Initialize styles with config colors
+	styles.InitializeStyles(cfg)
+
 	cmds, err := history.LoadAndParseZshHistory()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load history: %v\n", err)
 		os.Exit(1)
 	}
 
-	model := tui.NewModel(cmds, initialQuery)
+	model := tui.NewModel(cmds, cfg, initialQuery)
 
 	// Ensure TERM is set for color support (important when running from keybind)
 	term := os.Getenv("TERM")

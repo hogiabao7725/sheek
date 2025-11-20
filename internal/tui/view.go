@@ -17,11 +17,30 @@ func View(model Model) string {
 		inputContent = inputContent + placeholder
 	}
 
-	searchBar := components.RenderSearchComponent("> ", inputContent, model.SearchMode.String(), model.Width)
+	// Pass config values to search component
+	searchBar := components.RenderSearchComponent(
+		"> ",
+		inputContent,
+		model.SearchMode.String(),
+		model.Width,
+		model.Config.Margin,
+	)
 	b.WriteString(searchBar)
 	b.WriteString("\n")
 
-	listView := components.RenderListComponent(model.FilteredCommands, model.FuzzyPositions, model.List.Index(), model.Width, model.Height, model.Input.Value(), components.SearchMode(model.SearchMode))
+	// Pass config values to list component
+	listView := components.RenderListComponent(
+		model.FilteredCommands,
+		model.FuzzyPositions,
+		model.List.Index(),
+		model.Width,
+		model.Height,
+		model.Input.Value(),
+		components.SearchMode(model.SearchMode),
+		model.Config.MaxItems,
+		model.Config.Height,
+		model.Config.Margin,
+	)
 	b.WriteString(listView)
 	b.WriteString("\n")
 

@@ -21,35 +21,35 @@ const (
 )
 
 // RenderListComponent renders a sliding window of command list items with scrollbar
-func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]int, selectedIndex, terminalWidth, terminalHeight int, searchInput string, searchMode SearchMode) string {
+func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]int, selectedIndex, terminalWidth, terminalHeight int, searchInput string, searchMode SearchMode, maxVisibleItems, listContainerHeight, horizontalMargin int) string {
 	if len(commands) == 0 {
 		emptyMessage := "No commands found"
 		return styles.ListContainerStyle.
-			Width(terminalWidth - (styles.HorizontalMargin * 2) - 2).
-			Height(styles.ListContainerHeight).
+			Width(terminalWidth - (horizontalMargin * 2) - 2).
+			Height(listContainerHeight).
 			Render(styles.EmptyStateStyle.Render(emptyMessage))
 	}
 
-	startIndex, endIndex := calculateVisibleRange(len(commands), selectedIndex)
+	startIndex, endIndex := calculateVisibleRange(len(commands), selectedIndex, maxVisibleItems)
 
 	// Calculate container width
-	containerWidth := terminalWidth - (styles.HorizontalMargin * 2) - 2
+	containerWidth := terminalWidth - (horizontalMargin * 2) - 2
 
 	// Create scrollbar
-	scrollbar := RenderScrollbar(len(commands), styles.MaxVisibleItems, selectedIndex, styles.ListContainerHeight)
+	scrollbar := RenderScrollbar(len(commands), maxVisibleItems, selectedIndex, listContainerHeight)
 
 	// Calculate item width based on whether scrollbar exists
 	itemWidth := calculateItemWidth(containerWidth, scrollbar != "")
 
 	// Render items with correct width for selected item highlighting
-	items := renderCommandItems(commands, fuzzyPositions, startIndex, endIndex, selectedIndex, searchInput, searchMode, itemWidth)
+	items := renderCommandItems(commands, fuzzyPositions, startIndex, endIndex, selectedIndex, searchInput, searchMode, itemWidth, maxVisibleItems)
 	listContent := strings.Join(items, "\n")
 
 	// If no scrollbar needed, return just the list
 	if scrollbar == "" {
 		return styles.ListContainerStyle.
 			Width(containerWidth).
-			Height(styles.ListContainerHeight).
+			Height(listContainerHeight).
 			Render(listContent)
 	}
 
@@ -59,7 +59,7 @@ func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]in
 	// Create content with proper width (no border, just content)
 	contentStyled := lipgloss.NewStyle().
 		Width(contentWidth).
-		Height(styles.ListContainerHeight - 2). // -2 for border
+		Height(listContainerHeight - 2). // -2 for border
 		Render(listContent)
 
 	// Combine content and scrollbar horizontally
@@ -68,7 +68,7 @@ func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]in
 	// Wrap the combined content in a container with border
 	return styles.ListContainerStyle.
 		Width(containerWidth).
-		Height(styles.ListContainerHeight).
+		Height(listContainerHeight).
 		Render(combinedContent)
 }
 
@@ -83,8 +83,8 @@ func calculateItemWidth(containerWidth int, hasScrollbar bool) int {
 }
 
 // renderCommandItems creates styled items for the visible range with highlighting
-func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int, start, end, selectedIndex int, searchInput string, searchMode SearchMode, itemWidth int) []string {
-	items := make([]string, 0, styles.MaxVisibleItems)
+func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int, start, end, selectedIndex int, searchInput string, searchMode SearchMode, itemWidth, maxVisibleItems int) []string {
+	items := make([]string, 0, maxVisibleItems)
 
 	for i := start; i < end && i < len(commands); i++ {
 		cmd := commands[i]
@@ -127,21 +127,21 @@ func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int
 
 // calculateVisibleRange determines which items to display in a sliding window
 // centered around the selected index. It returns the start (inclusive) and end (exclusive) indices.
-func calculateVisibleRange(total, selectedIndex int) (start, end int) {
-	if total <= styles.MaxVisibleItems {
+func calculateVisibleRange(total, selectedIndex, maxVisibleItems int) (start, end int) {
+	if total <= maxVisibleItems {
 		return 0, total
 	}
 
-	halfWindow := styles.MaxVisibleItems / 2
+	halfWindow := maxVisibleItems / 2
 
 	// If selected item is near the beginning, show first MaxVisibleItems
 	if selectedIndex < halfWindow {
-		return 0, styles.MaxVisibleItems
+		return 0, maxVisibleItems
 	}
 
 	// If selected item is near the end, show last MaxVisibleItems
 	if selectedIndex > total-halfWindow {
-		return total - styles.MaxVisibleItems, total
+		return total - maxVisibleItems, total
 	}
 
 	// Otherwise, center the window around the selected item
