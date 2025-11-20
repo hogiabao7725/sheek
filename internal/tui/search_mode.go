@@ -6,7 +6,7 @@ type SearchMode string
 const (
 	// SearchModeExact performs exact substring matching
 	SearchModeExact SearchMode = "Exact"
-	// SearchModeFuzzy performs fuzzy matching (currently not implemented)
+	// SearchModeFuzzy performs fuzzy matching
 	SearchModeFuzzy SearchMode = "Fuzzy"
 )
 
@@ -22,4 +22,3 @@ func (s SearchMode) Toggle() SearchMode {
 	}
 	return SearchModeExact
 }
-

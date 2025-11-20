@@ -54,6 +54,10 @@ var (
 				PaddingRight(1).
 				Height(1)
 
+	SearchPlaceholderStyle = lipgloss.NewStyle().
+				Foreground(mutedColor).
+				Faint(true)
+
 	ModeBadgeStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(secondaryColor).
@@ -96,9 +100,9 @@ var (
 			Underline(true)
 
 	HighlightSelectedStyle = lipgloss.NewStyle().
-			Foreground(highlightColor).
-			Bold(true).
-			Underline(true)
+				Foreground(highlightColor).
+				Bold(true).
+				Underline(true)
 
 	ItemNumberStyle = lipgloss.NewStyle().
 			Foreground(accentColor).
@@ -123,4 +127,3 @@ var (
 				Foreground(primaryColor).
 				Width(1)
 )
-

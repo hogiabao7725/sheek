@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"sheek/internal/history"
@@ -22,13 +23,21 @@ func (m teaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m teaModel) View() string { return tui.View(tui.Model(m)) }
 
 func main() {
+	queryFlag := flag.String("query", "", "prefill the search input with a query")
+	flag.Parse()
+
+	initialQuery := *queryFlag
+	if initialQuery == "" {
+		initialQuery = os.Getenv("SHEEK_INITIAL_QUERY")
+	}
+
 	cmds, err := history.LoadAndParseZshHistory()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load history: %v\n", err)
 		os.Exit(1)
 	}
 
-	model := tui.NewModel(cmds)
+	model := tui.NewModel(cmds, initialQuery)
 
 	// Ensure TERM is set for color support (important when running from keybind)
 	term := os.Getenv("TERM")

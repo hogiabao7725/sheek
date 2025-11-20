@@ -20,27 +20,36 @@ type Model struct {
 	Height           int
 	SelectedCommand  string // Command selected when user presses Enter
 	LinesRendered    int    // Number of lines rendered by the UI (for cleanup)
+	Placeholder      string
 }
 
-// NewModel creates a new Model with the given commands
-func NewModel(commands []history.Command) Model {
+// NewModel creates a new Model with the given commands and optional initial query
+func NewModel(commands []history.Command, initialQuery string) Model {
 	items := components.CommandsToListItems(commands)
 
 	in := textinput.New()
-	in.Placeholder = "Search History..."
+	in.Placeholder = ""
+	in.Prompt = ""
 	in.Focus()
 	in.CharLimit = 128
+	in.SetValue(initialQuery)
+	in.CursorEnd()
 
 	l := list.New(items, list.NewDefaultDelegate(), 0, 10)
 	l.Title = "Recent Commands"
 	l.SetShowHelp(false)
 	l.SetFilteringEnabled(false)
 
-	return Model{
-		Input:           in,
-		List:            l,
-		Commands:        commands,
+	model := Model{
+		Input:            in,
+		List:             l,
+		Commands:         commands,
 		FilteredCommands: commands,
-		SearchMode:      SearchModeExact,
+		SearchMode:       SearchModeExact,
+		Placeholder:      "Search History...",
 	}
+
+	model = updateSearchResults(model)
+
+	return model
 }

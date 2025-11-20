@@ -6,14 +6,24 @@ import (
 )
 
 func TestSearchExact(t *testing.T) {
-	cmds, _ := LoadAndParseZshHistory()
+	cmds := []Command{
+		{Index: 0, Text: "kitty kitty"},
+		{Index: 1, Text: "kitty"},
+		{Index: 2, Text: "repeat after me"},
+		{Index: 3, Text: "another kitty command"},
+		{Index: 4, Text: "git status"},
+		{Index: 5, Text: "git repeat status"},
+		{Index: 6, Text: "zsh kitty script"},
+	}
 
 	tests := []struct {
 		input string
 		want  int
 	}{
-		{"kitty", 7},
+		{"kitty", 4},
 		{"repeat", 2},
+		{"", len(cmds)},
+		{"missing", 0},
 	}
 
 	for _, test := range tests {

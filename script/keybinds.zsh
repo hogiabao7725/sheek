@@ -29,9 +29,14 @@ fi
 
 sheek-widget() {
     local selected
-    # Preserve TERM and COLORTERM for color support
+    local cursor_pos=${CURSOR:-0}
+    local prompt_fragment=""
+    if (( cursor_pos > 0 )); then
+        prompt_fragment="${BUFFER[1,cursor_pos]}"
+    fi
+    # Preserve TERM and COLORTERM for color support and pass current prompt fragment
     # Capture stdout for command, but allow stderr to show (for command preview)
-    selected=$(TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" $SHEEK_BIN)
+    selected=$(SHEEK_INITIAL_QUERY="$prompt_fragment" TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" $SHEEK_BIN)
     
     if [ -n "$selected" ]; then
         # Remove trailing newline if any
