@@ -112,6 +112,32 @@ echo ""
 echo -e "${GREEN}sheek binary installed at: $BINARY_PATH${NC}"
 echo ""
 
+# Install default config file
+echo -e "${BOLD}=== Config Setup ===${NC}"
+CONFIG_DIR="$HOME/.config/sheek"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+DEFAULT_CONFIG="$PROJECT_ROOT/internal/config/default.json"
+
+if [ ! -f "$DEFAULT_CONFIG" ]; then
+    echo -e "${YELLOW}Warning: Default config file not found at $DEFAULT_CONFIG${NC}"
+    echo -e "${YELLOW}Skipping config installation.${NC}"
+else
+    # Create config directory if it doesn't exist
+    mkdir -p "$CONFIG_DIR"
+    
+    # Only copy if config.json doesn't exist (don't overwrite user's config)
+    if [ ! -f "$CONFIG_FILE" ]; then
+        cp "$DEFAULT_CONFIG" "$CONFIG_FILE"
+        echo -e "${GREEN}Default config installed at: $CONFIG_FILE${NC}"
+        echo -e "${BLUE}You can edit this file to customize sheek's appearance and behavior.${NC}"
+    else
+        echo -e "${YELLOW}Config file already exists at: $CONFIG_FILE${NC}"
+        echo -e "${BLUE}Skipping config installation to preserve your existing configuration.${NC}"
+        echo -e "${BLUE}To reset to defaults, delete the file and run install.sh again.${NC}"
+    fi
+fi
+echo ""
+
 # Detect shell and provide instructions
 CURRENT_SHELL="${SHELL##*/}"
 if [ -z "$CURRENT_SHELL" ]; then
