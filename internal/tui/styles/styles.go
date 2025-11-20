@@ -72,15 +72,16 @@ var (
 				MarginLeft(1).
 				MarginRight(1).
 				MarginTop(1).
-				MarginBottom(1)
+				MarginBottom(0)
 
 	ListContainerStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
 				BorderForeground(borderColor).
 				MarginLeft(1).
 				MarginRight(1).
-				MarginTop(1).
-				Padding(1)
+				MarginTop(0).
+				PaddingLeft(1).
+				PaddingRight(1)
 
 	ListItemStyle = lipgloss.NewStyle().
 			Foreground(textColor).

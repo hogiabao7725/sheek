@@ -19,6 +19,7 @@ func View(model Model) string {
 
 	searchBar := components.RenderSearchComponent("> ", inputContent, model.SearchMode.String(), model.Width)
 	b.WriteString(searchBar)
+	b.WriteString("\n")
 
 	listView := components.RenderListComponent(model.FilteredCommands, model.FuzzyPositions, model.List.Index(), model.Width, model.Height, model.Input.Value(), components.SearchMode(model.SearchMode))
 	b.WriteString(listView)
