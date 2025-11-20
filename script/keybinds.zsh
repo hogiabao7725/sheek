@@ -1,33 +1,43 @@
 # sheek - Ctrl+T keybinding for zsh
 # Add this to your ~/.zshrc: source /path/to/sheek/script/keybinds.zsh
 
-# Find sheek binary - try multiple locations
 SHEEK_BIN=""
-if [ -f "$HOME/.local/bin/sheek" ]; then
-    SHEEK_BIN="$HOME/.local/bin/sheek"
-elif [ -f "$HOME/go/bin/sheek" ]; then
-    SHEEK_BIN="$HOME/go/bin/sheek"
-elif [ -f "/usr/local/bin/sheek" ]; then
-    SHEEK_BIN="/usr/local/bin/sheek"
-elif [ -f "/usr/bin/sheek" ]; then
-    SHEEK_BIN="/usr/bin/sheek"
-elif command -v sheek &> /dev/null; then
-    SHEEK_BIN=$(command -v sheek)
-fi
+_SHEEK_BIN_WARNED=0
 
-if [ -z "$SHEEK_BIN" ] || [ ! -f "$SHEEK_BIN" ]; then
-    echo "Warning: sheek binary not found. Please install sheek first." >&2
-    echo "Run: cd /path/to/sheek && ./script/install.sh" >&2
-    return 1
-fi
+_sheek_require_binary() {
+    if [ -n "$SHEEK_BIN" ] && [ -x "$SHEEK_BIN" ]; then
+        return 0
+    fi
 
-# Verify binary is executable
-if [ ! -x "$SHEEK_BIN" ]; then
-    echo "Warning: sheek binary is not executable: $SHEEK_BIN" >&2
+    local candidate
+    for candidate in "$HOME/.local/bin/sheek" "$HOME/go/bin/sheek" "/usr/local/bin/sheek" "/usr/bin/sheek"; do
+        if [ -x "$candidate" ]; then
+            SHEEK_BIN="$candidate"
+            return 0
+        fi
+    done
+
+    if command -v sheek &> /dev/null; then
+        candidate="$(command -v sheek)"
+        if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+            SHEEK_BIN="$candidate"
+            return 0
+        fi
+    fi
+
+    if [ "${_SHEEK_BIN_WARNED:-0}" -eq 0 ]; then
+        echo "sheek: binary not found. Install it with ./script/install.sh and reload your shell." >&2
+        _SHEEK_BIN_WARNED=1
+    fi
+
     return 1
-fi
+}
 
 sheek-widget() {
+    if ! _sheek_require_binary; then
+        return 1
+    fi
+
     local selected
     local cursor_pos=${CURSOR:-0}
     local prompt_fragment=""
@@ -36,7 +46,7 @@ sheek-widget() {
     fi
     # Preserve TERM and COLORTERM for color support and pass current prompt fragment
     # Capture stdout for command, but allow stderr to show (for command preview)
-    selected=$(SHEEK_INITIAL_QUERY="$prompt_fragment" TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" $SHEEK_BIN)
+    selected=$(SHEEK_INITIAL_QUERY="$prompt_fragment" TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" "$SHEEK_BIN")
     
     if [ -n "$selected" ]; then
         # Remove trailing newline if any
@@ -51,9 +61,13 @@ sheek-widget() {
 # Shell function to run sheek and put selected command in prompt buffer
 # This allows running 'sheek' directly from command line (like fzf)
 sheek() {
+    if ! _sheek_require_binary; then
+        return 1
+    fi
+
     local selected
     # Preserve TERM and COLORTERM for color support
-    selected=$(TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" $SHEEK_BIN)
+    selected=$(TERM="${TERM:-xterm-256color}" COLORTERM="${COLORTERM:-truecolor}" "$SHEEK_BIN")
     
     if [ -n "$selected" ]; then
         # Remove trailing newline if any
