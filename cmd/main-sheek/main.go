@@ -17,7 +17,7 @@ import (
 
 type teaModel tui.Model
 
-func (m teaModel) Init() tea.Cmd { return nil }
+func (m teaModel) Init() tea.Cmd { return tui.TickCmd() }
 func (m teaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	nm, cmd := tui.Update(msg, tui.Model(m))
 	return teaModel(nm), cmd

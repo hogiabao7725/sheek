@@ -58,13 +58,13 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	var cfg Config
-	if err := json.Unmarshal(data, &cfg); err != nil {
+	cfgWithDefaults := DefaultConfig()
+	if err := json.Unmarshal(data, cfgWithDefaults); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
 	// Validate and apply defaults for missing fields
-	cfg = validateAndMergeDefaults(cfg)
+	cfg := validateAndMergeDefaults(*cfgWithDefaults)
 
 	return &cfg, nil
 }
@@ -163,4 +163,3 @@ func validateColors(colors, defaults ColorConfig) ColorConfig {
 
 	return colors
 }
-

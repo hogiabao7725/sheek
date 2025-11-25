@@ -8,15 +8,15 @@ import (
 
 // Color variables - updated by InitializeStyles
 var (
-	primaryColor    lipgloss.Color
-	secondaryColor  lipgloss.Color
-	mutedColor      lipgloss.Color
-	borderColor     lipgloss.Color
-	textColor       lipgloss.Color
-	selectedColor   lipgloss.Color
-	accentColor     lipgloss.Color
-	highlightColor  lipgloss.Color
-	MutedColor      lipgloss.Color // Exported for external use
+	primaryColor   lipgloss.Color
+	secondaryColor lipgloss.Color
+	mutedColor     lipgloss.Color
+	borderColor    lipgloss.Color
+	textColor      lipgloss.Color
+	selectedColor  lipgloss.Color
+	accentColor    lipgloss.Color
+	highlightColor lipgloss.Color
+	MutedColor     lipgloss.Color // Exported for external use
 )
 
 // Component styles - initialized by InitializeStyles
@@ -32,6 +32,7 @@ var (
 	HighlightStyle         lipgloss.Style
 	HighlightSelectedStyle lipgloss.Style
 	ItemNumberStyle        lipgloss.Style
+	TimestampStyle         lipgloss.Style
 	CommandTextStyle       lipgloss.Style
 	EmptyStateStyle        lipgloss.Style
 	ScrollbarTrackStyle    lipgloss.Style
@@ -53,36 +54,53 @@ func InitializeStyles(cfg *config.Config) {
 
 	// Initialize all component styles
 	PromptStyle = lipgloss.NewStyle().Foreground(primaryColor).Bold(true)
+
 	SearchInputStyle = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
 		Foreground(textColor).
 		PaddingLeft(1).PaddingRight(1).Height(1)
 	SearchPlaceholderStyle = lipgloss.NewStyle().Foreground(mutedColor).Faint(true)
+
 	ModeBadgeStyle = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(secondaryColor).
 		Foreground(secondaryColor).
 		Bold(true).PaddingLeft(1).PaddingRight(1).Height(1).
 		Align(lipgloss.Center)
+
 	SearchContainerStyle = lipgloss.NewStyle().MarginLeft(1).MarginRight(1).MarginTop(1)
+
 	ListContainerStyle = lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor).
 		MarginLeft(1).MarginRight(1).
 		PaddingLeft(1).PaddingRight(1)
+
 	ListItemStyle = lipgloss.NewStyle().Foreground(textColor).PaddingLeft(1).PaddingRight(1)
+
 	ListItemSelectedStyle = lipgloss.NewStyle().
 		Foreground(textColor).
 		Background(selectedColor).
 		Bold(true).PaddingLeft(1).PaddingRight(1)
 	HighlightStyle = lipgloss.NewStyle().Foreground(highlightColor).Bold(true).Underline(true)
+
 	HighlightSelectedStyle = lipgloss.NewStyle().Foreground(highlightColor).Bold(true).Underline(true)
+
 	ItemNumberStyle = lipgloss.NewStyle().
 		Foreground(accentColor).
-		Bold(true).Width(4).Align(lipgloss.Right)
+		Bold(true).Width(4).Align(lipgloss.Right).
+		MarginRight(1)
+	TimestampStyle = lipgloss.NewStyle().
+		Foreground(mutedColor).
+		Width(7).
+		Align(lipgloss.Right).
+		MarginRight(1)
 	CommandTextStyle = lipgloss.NewStyle().Foreground(textColor).MarginLeft(1)
+
 	EmptyStateStyle = lipgloss.NewStyle().Foreground(mutedColor).Align(lipgloss.Center).Padding(2)
+
 	ScrollbarTrackStyle = lipgloss.NewStyle().Foreground(mutedColor).Width(1)
+
 	ScrollbarThumbStyle = lipgloss.NewStyle().Foreground(primaryColor).Width(1)
 }

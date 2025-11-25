@@ -3,6 +3,7 @@ package components
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"sheek/internal/history"
 	"sheek/internal/tui/styles"
@@ -21,7 +22,7 @@ const (
 )
 
 // RenderListComponent renders a sliding window of command list items with scrollbar
-func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]int, selectedIndex, terminalWidth, terminalHeight int, searchInput string, searchMode SearchMode, maxVisibleItems, listContainerHeight, horizontalMargin int) string {
+func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]int, selectedIndex, terminalWidth, terminalHeight int, searchInput string, searchMode SearchMode, maxVisibleItems, listContainerHeight, horizontalMargin int, showTimestamp bool) string {
 	if len(commands) == 0 {
 		emptyMessage := "No commands found"
 		return styles.ListContainerStyle.
@@ -42,7 +43,7 @@ func RenderListComponent(commands []history.Command, fuzzyPositions map[int][]in
 	itemWidth := calculateItemWidth(containerWidth, scrollbar != "")
 
 	// Render items with correct width for selected item highlighting
-	items := renderCommandItems(commands, fuzzyPositions, startIndex, endIndex, selectedIndex, searchInput, searchMode, itemWidth, maxVisibleItems)
+	items := renderCommandItems(commands, fuzzyPositions, startIndex, endIndex, selectedIndex, searchInput, searchMode, itemWidth, maxVisibleItems, showTimestamp)
 	listContent := strings.Join(items, "\n")
 
 	// If no scrollbar needed, return just the list
@@ -83,7 +84,7 @@ func calculateItemWidth(containerWidth int, hasScrollbar bool) int {
 }
 
 // renderCommandItems creates styled items for the visible range with highlighting
-func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int, start, end, selectedIndex int, searchInput string, searchMode SearchMode, itemWidth, maxVisibleItems int) []string {
+func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int, start, end, selectedIndex int, searchInput string, searchMode SearchMode, itemWidth, maxVisibleItems int, showTimestamp bool) []string {
 	items := make([]string, 0, maxVisibleItems)
 
 	for i := start; i < end && i < len(commands); i++ {
@@ -91,6 +92,10 @@ func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int
 		isSelected := i == selectedIndex
 
 		itemNumber := styles.ItemNumberStyle.Render(fmt.Sprintf("%d", cmd.Index))
+		var timestampContent string
+		if showTimestamp {
+			timestampContent = styles.TimestampStyle.Render(formatTimestamp(cmd.Timestamp))
+		}
 
 		// Highlight matching text based on search mode
 		var highlightedText string
@@ -104,7 +109,12 @@ func renderCommandItems(commands []history.Command, fuzzyPositions map[int][]int
 		}
 		commandText := styles.CommandTextStyle.Render(highlightedText)
 
-		itemContent := lipgloss.JoinHorizontal(lipgloss.Top, itemNumber, commandText)
+		var itemContent string
+		if showTimestamp {
+			itemContent = lipgloss.JoinHorizontal(lipgloss.Top, itemNumber, timestampContent, commandText)
+		} else {
+			itemContent = lipgloss.JoinHorizontal(lipgloss.Top, itemNumber, commandText)
+		}
 
 		// Apply selected or normal style with full width to ensure background covers entire line
 		var styledItem string
@@ -148,3 +158,34 @@ func calculateVisibleRange(total, selectedIndex, maxVisibleItems int) (start, en
 	return selectedIndex - halfWindow, selectedIndex + halfWindow
 }
 
+func formatTimestamp(ts time.Time) string {
+	if ts.IsZero() {
+		return "--"
+	}
+
+	now := time.Now()
+	if ts.After(now) {
+		ts = now
+	}
+
+	diff := now.Sub(ts)
+
+	switch {
+	case diff < time.Minute:
+		seconds := int(diff.Seconds())
+		if seconds < 1 {
+			seconds = 1
+		}
+		return fmt.Sprintf("%ds", seconds)
+	case diff < time.Hour:
+		return fmt.Sprintf("%dm", int(diff.Minutes()))
+	case diff < 24*time.Hour:
+		return fmt.Sprintf("%dh", int(diff.Hours()))
+	case diff < 30*24*time.Hour:
+		return fmt.Sprintf("%dd", int(diff.Hours()/(24)))
+	case diff < 365*24*time.Hour:
+		return ts.Format("Jan 02")
+	default:
+		return ts.Format("2006-01-02")
+	}
+}

@@ -40,6 +40,7 @@ func View(model Model) string {
 		model.Config.MaxItems,
 		model.Config.Height,
 		model.Config.Margin,
+		model.Config.ShowTimestamp,
 	)
 	b.WriteString(listView)
 	b.WriteString("\n")

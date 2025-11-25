@@ -1,11 +1,28 @@
 package tui
 
 import (
+	"time"
+
 	"sheek/internal/history"
 	"sheek/internal/tui/components"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+const relativeTimeRefreshInterval = time.Second
+
+type tickMsg struct{}
+
+// TickCmd returns a command that schedules periodic ticks for refreshing relative timestamps.
+func TickCmd() tea.Cmd {
+	return newTickCmd()
+}
+
+func newTickCmd() tea.Cmd {
+	return tea.Tick(relativeTimeRefreshInterval, func(time.Time) tea.Msg {
+		return tickMsg{}
+	})
+}
 
 // Update handles application updates based on messages
 func Update(msg tea.Msg, model Model) (Model, tea.Cmd) {
@@ -29,6 +46,8 @@ func Update(msg tea.Msg, model Model) (Model, tea.Cmd) {
 			model.List, listCmd = model.List.Update(msg)
 			cmds = append(cmds, listCmd)
 		}
+	case tickMsg:
+		cmds = append(cmds, newTickCmd())
 	}
 
 	// Update input

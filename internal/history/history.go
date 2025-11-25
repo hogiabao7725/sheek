@@ -1,8 +1,11 @@
 package history
 
+import "time"
+
 type Command struct {
-	Index int
-	Text  string
+	Index     int
+	Text      string
+	Timestamp time.Time
 }
 
 func LoadAndParseZshHistory() ([]Command, error) {

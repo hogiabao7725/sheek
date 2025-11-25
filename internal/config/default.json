@@ -2,6 +2,7 @@
   "max_items": 10,
   "height": 10,
   "margin": 1,
+  "show_timestamp": true,
   "reverse": false,
   "mode": "exact",
   "limit": 128,
