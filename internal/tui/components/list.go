@@ -182,10 +182,18 @@ func formatTimestamp(ts time.Time) string {
 	case diff < 24*time.Hour:
 		return fmt.Sprintf("%dh", int(diff.Hours()))
 	case diff < 30*24*time.Hour:
-		return fmt.Sprintf("%dd", int(diff.Hours()/(24)))
+		return fmt.Sprintf("%dd", int(diff.Hours()/24))
 	case diff < 365*24*time.Hour:
-		return ts.Format("Jan 02")
+		months := int(diff.Hours() / (24 * 30))
+		if months < 1 {
+			months = 1
+		}
+		return fmt.Sprintf("%dmo", months)
 	default:
-		return ts.Format("2006-01-02")
+		years := int(diff.Hours() / (24 * 365))
+		if years < 1 {
+			years = 1
+		}
+		return fmt.Sprintf("%dyr", years)
 	}
 }

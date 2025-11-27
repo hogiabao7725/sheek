@@ -112,11 +112,13 @@ echo ""
 echo -e "${GREEN}sheek binary installed at: $BINARY_PATH${NC}"
 echo ""
 
-# Install default config file
-echo -e "${BOLD}=== Config Setup ===${NC}"
+# Install default config file and history storage
+echo -e "${BOLD}=== Config & History Setup ===${NC}"
 CONFIG_DIR="$HOME/.config/sheek"
 CONFIG_FILE="$CONFIG_DIR/config.json"
+HISTORY_FILE="$CONFIG_DIR/.sheek_history"
 DEFAULT_CONFIG="$PROJECT_ROOT/internal/config/default.json"
+DEFAULT_HISTORY="$PROJECT_ROOT/.sheek_history"
 
 if [ ! -f "$DEFAULT_CONFIG" ]; then
     echo -e "${YELLOW}Warning: Default config file not found at $DEFAULT_CONFIG${NC}"
@@ -135,6 +137,22 @@ else
         echo -e "${BLUE}Skipping config installation to preserve your existing configuration.${NC}"
         echo -e "${BLUE}To reset to defaults, delete the file and run install.sh again.${NC}"
     fi
+fi
+
+# Ensure history file exists (seed with sample data if provided)
+if [ ! -f "$HISTORY_FILE" ]; then
+    if [ -f "$DEFAULT_HISTORY" ]; then
+        cp "$DEFAULT_HISTORY" "$HISTORY_FILE"
+        chmod 600 "$HISTORY_FILE"
+        echo -e "${GREEN}Seeded history stored at: $HISTORY_FILE${NC}"
+    else
+        touch "$HISTORY_FILE"
+        chmod 600 "$HISTORY_FILE"
+        echo -e "${GREEN}Created empty history file at: $HISTORY_FILE${NC}"
+    fi
+else
+    echo -e "${YELLOW}History file already exists at: $HISTORY_FILE${NC}"
+    echo -e "${BLUE}Sheek will continue appending to this file.${NC}"
 fi
 echo ""
 

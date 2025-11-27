@@ -3,6 +3,7 @@
 
 SHEEK_BIN=""
 _SHEEK_BIN_WARNED=0
+: "${SHEEK_AUTO_RECORD:=1}"
 
 _sheek_require_binary() {
     if [ -n "$SHEEK_BIN" ] && [ -x "$SHEEK_BIN" ]; then
@@ -31,6 +32,38 @@ _sheek_require_binary() {
     fi
 
     return 1
+}
+
+_sheek_record_history_entry() {
+    if [ "${SHEEK_AUTO_RECORD:-1}" -eq 0 ]; then
+        return 0
+    fi
+
+    emulate -L zsh
+
+    local entry="${1:-}"
+    if [ -z "$entry" ]; then
+        return 0
+    fi
+
+    case "$entry" in
+        sheek|sheek\ *|*SheekRecorderSkip* )
+            return 0
+            ;;
+    esac
+
+    if ! _sheek_require_binary; then
+        return 0
+    fi
+
+    {
+        "$SHEEK_BIN" record \
+            --cmd "$entry" \
+            --cwd "$PWD" \
+            --ts "$(date +%s)" >/dev/null 2>&1
+    } &!
+
+    return 0
 }
 
 sheek-widget() {
@@ -84,4 +117,9 @@ zle -N sheek-widget
 bindkey -r '^T' 2>/dev/null || true
 # Bind Ctrl+T to sheek widget
 bindkey '^T' sheek-widget
+
+# Register recorder hook once
+if [[ -z "${zshaddhistory_functions[(r)_sheek_record_history_entry]}" ]]; then
+    zshaddhistory_functions+=(_sheek_record_history_entry)
+fi
 

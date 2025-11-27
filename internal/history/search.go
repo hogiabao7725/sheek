@@ -47,7 +47,7 @@ func SearchFuzzy(commands []Command, input string) []Command {
 		if len(positions) == 0 {
 			continue
 		}
-		score := calculateFuzzyScoreWithPositions(cmd.Text, input, inputLower, positions)
+		score := calculateFuzzyScoreWithPositions(cmd.Text, input, inputLower, positions) + cmd.ContextBoost
 		if score > 0 {
 			matches = append(matches, FuzzyMatch{
 				Command:   cmd,
@@ -95,7 +95,7 @@ func SearchFuzzyWithPositions(commands []Command, input string) []FuzzyMatchResu
 		if len(positions) == 0 {
 			continue
 		}
-		score := calculateFuzzyScoreWithPositions(cmd.Text, input, inputLower, positions)
+		score := calculateFuzzyScoreWithPositions(cmd.Text, input, inputLower, positions) + cmd.ContextBoost
 		if score > 0 {
 			matches = append(matches, FuzzyMatch{
 				Command:   cmd,

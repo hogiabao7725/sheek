@@ -2,17 +2,33 @@ package history
 
 import "time"
 
-type Command struct {
-	Index     int
-	Text      string
-	Timestamp time.Time
+// CommandSource identifies where a command came from.
+type CommandSource string
+
+const (
+	CommandSourceUnknown CommandSource = "unknown"
+	CommandSourceSheek   CommandSource = "sheek"
+)
+
+// CommandContext stores execution metadata for scoring.
+type CommandContext struct {
+	Directory string
+	Repo      string
+	Branch    string
+	Workspace string
 }
 
-func LoadAndParseZshHistory() ([]Command, error) {
-	rawLines, err := LoadZshHistory()
-	if err != nil {
-		return nil, err
-	}
-	cmds := ParseZshHistory(rawLines)
-	return cmds, nil
+// Command represents a shell command with optional metadata.
+type Command struct {
+	Index        int
+	Text         string
+	Timestamp    time.Time
+	Context      CommandContext
+	Source       CommandSource
+	ContextBoost int
+}
+
+// LoadCommands loads structured sheek history from ~/.sheek_history.
+func LoadCommands() ([]Command, error) {
+	return LoadSheekHistory()
 }

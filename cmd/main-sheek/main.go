@@ -3,11 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sheek/internal/config"
 	"sheek/internal/history"
 	"sheek/internal/tui"
 	"sheek/internal/tui/styles"
+	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -25,6 +28,14 @@ func (m teaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m teaModel) View() string { return tui.View(tui.Model(m)) }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "record" {
+		if err := handleRecordCommand(os.Args[2:]); err != nil {
+			fmt.Fprintf(os.Stderr, "sheek record: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	queryFlag := flag.String("query", "", "prefill the search input with a query")
 	flag.Parse()
 
@@ -43,11 +54,14 @@ func main() {
 	// Initialize styles with config colors
 	styles.InitializeStyles(cfg)
 
-	cmds, err := history.LoadAndParseZshHistory()
+	cmds, err := history.LoadCommands()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load history: %v\n", err)
 		os.Exit(1)
 	}
+
+	ctx := history.CurrentContext()
+	cmds = history.ApplyContextBoost(cmds, ctx)
 
 	model := tui.NewModel(cmds, cfg, initialQuery)
 
@@ -122,4 +136,38 @@ func main() {
 		// If no command selected (ESC/Ctrl+C), exit with non-zero code
 		os.Exit(1)
 	}
+}
+
+func handleRecordCommand(args []string) error {
+	fs := flag.NewFlagSet("record", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+
+	cmdText := fs.String("cmd", "", "command text to record")
+	cwd := fs.String("cwd", "", "command working directory")
+	repo := fs.String("repo", "", "repository override")
+	branch := fs.String("branch", "", "branch override")
+	workspace := fs.String("workspace", "", "workspace override")
+	ts := fs.Int64("ts", 0, "unix timestamp (seconds)")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(*cmdText) == "" {
+		return fmt.Errorf("--cmd is required")
+	}
+
+	payload := history.RecordPayload{
+		Command:   *cmdText,
+		Directory: *cwd,
+		Repo:      *repo,
+		Branch:    *branch,
+		Workspace: *workspace,
+	}
+
+	if *ts > 0 {
+		payload.Timestamp = time.Unix(*ts, 0)
+	}
+
+	return history.RecordCommand(payload)
 }
