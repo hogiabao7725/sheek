@@ -156,6 +156,42 @@ else
 fi
 echo ""
 
+echo -e "${BOLD}=== History Import (optional) ===${NC}"
+echo "Would you like to import existing shell history into sheek?"
+echo "1) Import from zsh"
+echo "2) Import from bash"
+echo "3) Import from fish"
+echo "4) Skip"
+echo ""
+read -p "Choose option [1-4]: " import_choice
+case $import_choice in
+    1)
+        if "$BINARY_PATH" import --shell zsh --append >/dev/null 2>&1; then
+            echo -e "${GREEN}Imported zsh history into sheek.${NC}"
+        else
+            echo -e "${YELLOW}Unable to import zsh history. You can run 'sheek import --shell zsh' later.${NC}"
+        fi
+        ;;
+    2)
+        if "$BINARY_PATH" import --shell bash --append >/dev/null 2>&1; then
+            echo -e "${GREEN}Imported bash history into sheek.${NC}"
+        else
+            echo -e "${YELLOW}Unable to import bash history. You can run 'sheek import --shell bash' later.${NC}"
+        fi
+        ;;
+    3)
+        if "$BINARY_PATH" import --shell fish --append >/dev/null 2>&1; then
+            echo -e "${GREEN}Imported fish history into sheek.${NC}"
+        else
+            echo -e "${YELLOW}Unable to import fish history. You can run 'sheek import --shell fish' later.${NC}"
+        fi
+        ;;
+    *)
+        echo -e "${BLUE}Skipping history import.${NC}"
+        ;;
+esac
+echo ""
+
 # Detect shell and provide instructions
 CURRENT_SHELL="${SHELL##*/}"
 if [ -z "$CURRENT_SHELL" ]; then

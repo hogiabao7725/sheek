@@ -11,12 +11,13 @@ import (
 	"time"
 )
 
-const sheekHistoryFilename = ".sheek_history"
+const historyFileName = ".sheek_history"
 
 // ErrSheekHistoryMissing indicates there is no structured history yet.
 var ErrSheekHistoryMissing = errors.New("sheek history not found")
 
-type historyRecord struct {
+// HistoryRecord mirrors the JSON structure stored on disk.
+type HistoryRecord struct {
 	Command   string `json:"cmd"`
 	Timestamp int64  `json:"ts"`
 	Directory string `json:"cwd"`
@@ -35,18 +36,19 @@ type RecordPayload struct {
 	Timestamp time.Time
 }
 
-func sheekHistoryPath() (string, error) {
+// HistoryFilePath returns the absolute path to ~/.config/sheek/.sheek_history.
+func HistoryFilePath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 	configDir := filepath.Join(home, ".config", "sheek")
-	return filepath.Join(configDir, sheekHistoryFilename), nil
+	return filepath.Join(configDir, historyFileName), nil
 }
 
 // LoadSheekHistory reads ~/.sheek_history JSONL entries.
 func LoadSheekHistory() ([]Command, error) {
-	path, err := sheekHistoryPath()
+	path, err := HistoryFilePath()
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +77,7 @@ func LoadSheekHistory() ([]Command, error) {
 			continue
 		}
 
-		var record historyRecord
+		var record HistoryRecord
 		if err := json.Unmarshal([]byte(line), &record); err != nil {
 			continue // Skip malformed entries silently
 		}
@@ -148,7 +150,7 @@ func RecordCommand(payload RecordPayload) error {
 		ctx.Workspace = payload.Workspace
 	}
 
-	record := historyRecord{
+	record := HistoryRecord{
 		Command:   command,
 		Timestamp: ts.Unix(),
 		Directory: absDir,
@@ -157,12 +159,16 @@ func RecordCommand(payload RecordPayload) error {
 		Workspace: ctx.Workspace,
 	}
 
-	data, err := json.Marshal(record)
-	if err != nil {
-		return err
+	return writeHistoryRecords([]HistoryRecord{record}, true)
+}
+
+// writeHistoryRecords persists records to ~/.sheek_history.
+func writeHistoryRecords(records []HistoryRecord, appendMode bool) error {
+	if len(records) == 0 {
+		return nil
 	}
 
-	path, err := sheekHistoryPath()
+	path, err := HistoryFilePath()
 	if err != nil {
 		return err
 	}
@@ -171,16 +177,41 @@ func RecordCommand(payload RecordPayload) error {
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600)
+	flags := os.O_CREATE | os.O_WRONLY
+	if appendMode {
+		flags |= os.O_APPEND
+	} else {
+		flags |= os.O_TRUNC
+	}
+
+	file, err := os.OpenFile(path, flags, 0o600)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	if _, err := file.Write(append(data, '\n')); err != nil {
-		return err
+	encoder := json.NewEncoder(file)
+	for _, record := range records {
+		if strings.TrimSpace(record.Command) == "" {
+			continue
+		}
+		if record.Timestamp < 1 {
+			record.Timestamp = 1
+		}
+		if err := encoder.Encode(record); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
+// AppendHistoryRecords appends entries to ~/.sheek_history.
+func AppendHistoryRecords(records []HistoryRecord) error {
+	return writeHistoryRecords(records, true)
+}
+
+// ReplaceHistoryRecords overwrites ~/.sheek_history with provided entries.
+func ReplaceHistoryRecords(records []HistoryRecord) error {
+	return writeHistoryRecords(records, false)
+}

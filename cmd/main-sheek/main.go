@@ -28,12 +28,21 @@ func (m teaModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m teaModel) View() string { return tui.View(tui.Model(m)) }
 
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "record" {
-		if err := handleRecordCommand(os.Args[2:]); err != nil {
-			fmt.Fprintf(os.Stderr, "sheek record: %v\n", err)
-			os.Exit(1)
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "record":
+			if err := handleRecordCommand(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "sheek record: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		case "import":
+			if err := handleImportCommand(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "sheek import: %v\n", err)
+				os.Exit(1)
+			}
+			return
 		}
-		return
 	}
 
 	queryFlag := flag.String("query", "", "prefill the search input with a query")
@@ -170,4 +179,35 @@ func handleRecordCommand(args []string) error {
 	}
 
 	return history.RecordCommand(payload)
+}
+
+func handleImportCommand(args []string) error {
+	fs := flag.NewFlagSet("import", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+
+	shell := fs.String("shell", "", "shell to import (zsh|bash|fish)")
+	source := fs.String("source", "", "path to custom history file")
+	limit := fs.Int("limit", 0, "maximum commands to import (0 = all)")
+	appendMode := fs.Bool("append", true, "append instead of replacing history file")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(*shell) == "" {
+		return fmt.Errorf("--shell is required")
+	}
+
+	count, err := history.ImportHistory(history.ImportOptions{
+		Shell:      *shell,
+		SourcePath: *source,
+		Limit:      *limit,
+		Append:     *appendMode,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(os.Stderr, "Imported %d commands into sheek history\n", count)
+	return nil
 }
