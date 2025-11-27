@@ -4,6 +4,7 @@
   "margin": 1,
   "show_timestamp": true,
   "reverse": false,
+  "contextual": true,
   "mode": "exact",
   "limit": 128,
   "placeholder": "Search History...",

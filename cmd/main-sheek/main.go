@@ -69,8 +69,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx := history.CurrentContext()
-	cmds = history.ApplyContextBoost(cmds, ctx)
+	if cfg.Contextual {
+		ctx := history.CurrentContext()
+		cmds = history.ApplyContextBoost(cmds, ctx)
+	}
 
 	model := tui.NewModel(cmds, cfg, initialQuery)
 

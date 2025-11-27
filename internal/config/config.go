@@ -21,8 +21,9 @@ type Config struct {
 	ShowTimestamp bool `json:"show_timestamp"` // Display command timestamp column (default: true)
 
 	// Display
-	Reverse bool   `json:"reverse"` // Reverse display order (default: false)
-	Mode    string `json:"mode"`    // Search mode: "exact" or "fuzzy" (default: "exact")
+	Reverse    bool   `json:"reverse"`    // Reverse display order (default: false)
+	Mode       string `json:"mode"`       // Search mode: "exact" or "fuzzy" (default: "exact")
+	Contextual bool   `json:"contextual"` // Enable context-aware ranking (default: true)
 
 	// Input
 	Limit       int    `json:"limit"`       // Input character limit (default: 128)
@@ -44,6 +45,7 @@ func DefaultConfig() *Config {
 		ShowTimestamp: true,
 		Reverse:       false,
 		Mode:          "exact",
+		Contextual:    true,
 		Limit:         128,
 		Placeholder:   "Search History...",
 		Title:         "Recent Commands",
